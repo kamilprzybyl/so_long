@@ -1,48 +1,5 @@
 #include "so_long.h"
 
-void my_mlx_pixel_put(t_image *data, int x, int y, int color)
-{
-	char *dst;
-	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
-	*(unsigned int*)dst = color;
-}
-
-int	get_pixel(t_image *data, int x, int y)
-{
-	char *dst;
-	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
-	return (*(unsigned int*)dst);
-}
-
-int	key_hook(int keycode, t_vars *vars)
-{
-	if (keycode == KEY_ESC)
-	{
-		// mlx_destroy_window(vars->mlx, vars->win);
-		exit(0);
-	}
-	if (keycode == KEY_T)
-		mlx_string_put(vars->mlx, vars->win, 500, 500, 0xFFFFFF, "KAMIL IST EHRENMANN");
-	return (printf("Hello from key_hook!\n"));
-}
-
-/* int	load_images(t_game *game)
-{
-	t_image image;
-
-	image.ptr_img = mlx_xpm_file_to_image(game->vars.mlx, SURFACE, &image.width, &image.height);
-	game->images[0] = image.ptr_img;
-	image.ptr_img = mlx_xpm_file_to_image(game->vars.mlx, WALL, &image.width, &image.height);
-	game->images[1] = image.ptr_img;
-	image.ptr_img = mlx_xpm_file_to_image(game->vars.mlx, PLAYER, &image.width, &image.height);
-	game->images[2] = image.ptr_img;
-	image.ptr_img = mlx_xpm_file_to_image(game->vars.mlx, FOOD, &image.width, &image.height);
-	game->images[3] = image.ptr_img;
-	image.ptr_img = mlx_xpm_file_to_image(game->vars.mlx, EXIT, &image.width, &image.height);
-	game->images[4] = image.ptr_img;
-	return (0);
-} */
-
 int	get_num_of_cols(char *file)
 {
 	int	i;
@@ -75,6 +32,7 @@ char	**read_map(int fd, char **argv)
 	while (1)
 	{
 		line = get_next_line(fd);
+		// printf("line = %s\n", line);
 		if (!line)
 			break ;
 		arr[j] = (char *)malloc(sizeof(char) * ft_strlen(line));
@@ -87,37 +45,28 @@ char	**read_map(int fd, char **argv)
 		j++;
 	}
 	arr[j] = NULL;
+	close(fd);
 	return (arr);
 }
 
-/* int	draw_map(t_game *game, int fd)
+void my_mlx_pixel_put(t_image *data, int x, int y, int color)
 {
-	int		i;
-	char 	*line;
+	char *dst;
+	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
+	*(unsigned int*)dst = color;
+}
 
-	line = get_next_line(fd);
-	while (line)
-	{
-		i = 0;
-		while (line[i])
-		{
-			if (line[i] == '0')
-				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[0], 900, 300);
-			else if (line[i] == '1')
-				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[1], 100, 0);
-			else if (line[i] == 'P')
-				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[2], 0, 600);
-			else if (line[i] == 'C')
-				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[3], 100, 600);
-			else if (line[i] == 'E')
-				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[4], 300, 600);
-			i++;
-		}
-		line = get_next_line(fd);
-	}
-	return (0);
-} */
+int	get_pixel(t_image *data, int x, int y)
+{
+	char *dst;
+	dst = data->addr + (y * data->line_length + x * (data->bits_per_pixel / 8));
+	return (*(unsigned int*)dst);
+}
 
+
+/*
+** on error returns 1 input image is not freed else it will overwrite the old image
+*/
 int	resize_ptr_img(t_image *ptr_img, void  *mlx)
 {
 	t_image new;
@@ -141,7 +90,78 @@ int	resize_ptr_img(t_image *ptr_img, void  *mlx)
 		}
 		x++;
 	}
+	mlx_destroy_image(mlx, ptr_img->ptr_img);
 	*ptr_img = new;
+	return (0);
+}
+
+int	key_hook(int keycode, t_vars *vars)
+{
+	if (keycode == KEY_ESC)
+	{
+		mlx_destroy_window(vars->mlx, vars->win);
+		exit(0);
+	}
+	// if (keycode == KEY_W)
+	// 	move_up();
+	// if (keycode == KEY_A)
+	// 	move_down();
+	// if (keycode == KEY_S)
+	// 	move_left();
+	// if (keycode == KEY_D)
+	// 	move_right();
+	return (1);
+}
+
+int	load_images(t_game *game)
+{
+	game->images[0].ptr_img = mlx_xpm_file_to_image(game->vars.mlx, SURFACE, &(game->images[0].width), &(game->images[0].height));
+	game->images[0].addr = mlx_get_data_addr(game->images[0].ptr_img, &game->images[0].bits_per_pixel, &game->images[0].line_length, &game->images[0].endian);
+	resize_ptr_img(&(game->images[0]), game->vars.mlx);
+	game->images[1].ptr_img = mlx_xpm_file_to_image(game->vars.mlx, WALL, &(game->images[1].width), &(game->images[1].height));
+	game->images[1].addr = mlx_get_data_addr(game->images[1].ptr_img, &game->images[1].bits_per_pixel, &game->images[1].line_length, &game->images[1].endian);
+	resize_ptr_img(&(game->images[1]), game->vars.mlx);
+	game->images[2].ptr_img = mlx_xpm_file_to_image(game->vars.mlx, PLAYER, &(game->images[2].width), &(game->images[2].height));
+	game->images[2].addr = mlx_get_data_addr(game->images[2].ptr_img, &game->images[2].bits_per_pixel, &game->images[2].line_length, &game->images[2].endian);
+	resize_ptr_img(&(game->images[2]), game->vars.mlx);
+	game->images[3].ptr_img = mlx_xpm_file_to_image(game->vars.mlx, FOOD, &(game->images[3].width), &(game->images[3].height));
+	game->images[3].addr = mlx_get_data_addr(game->images[3].ptr_img, &game->images[3].bits_per_pixel, &game->images[3].line_length, &game->images[3].endian);
+	resize_ptr_img(&(game->images[3]), game->vars.mlx);
+	game->images[4].ptr_img = mlx_xpm_file_to_image(game->vars.mlx, EXIT, &(game->images[4].width), &(game->images[4].height));
+	game->images[4].addr = mlx_get_data_addr(game->images[4].ptr_img, &game->images[4].bits_per_pixel, &game->images[4].line_length, &game->images[4].endian);
+	resize_ptr_img(&(game->images[4]), game->vars.mlx);
+	return (0);
+}
+
+int	draw_map(t_game *game, char **arr)
+{
+	int		i;
+	int		j;
+	int		x;
+	int		y;
+
+	i = 0;
+	y = 0;
+	while (arr[i])
+	{
+		j = 0;
+		x = 0;
+		while (arr[i][j])
+		{
+			if (arr[i][j] == '1')
+				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[1].ptr_img, x, y);
+			if (arr[i][j] == 'P')
+				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[2].ptr_img, x, y);
+			else if (arr[i][j] == 'C')
+				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[3].ptr_img, x, y);
+			else if (arr[i][j] == 'E')
+				mlx_put_image_to_window(game->vars.mlx, game->vars.win, game->images[4].ptr_img, x, y);
+			x += game->images[1].width;
+			j++;
+		}
+		i++;
+		y += game->images[1].width;
+	}
 	return (0);
 }
 
@@ -149,6 +169,7 @@ int main(int argc, char **argv)
 {
 	t_game	game;
 	int		fd;
+	char	**arr;
 
 	if (argc != 2)
 	{
@@ -161,31 +182,15 @@ int main(int argc, char **argv)
 		write(2, "Error\nBad file descriptor\n", 28);
 		return (-1);
 	}
-	close(fd);
 	game.vars.mlx = mlx_init();
-	game.vars.win = mlx_new_window(game.vars.mlx, 1920, 1080, "SO_LONG");
-	//printf("test\n");
-	
-	// char **arr = read_map(fd, argv);
+	arr = read_map(fd, argv);
 	// for (int i = 0; arr[i]; i++)
 	// 	for (int j = 0; arr[i][j]; j++)
 	// 		printf("%c", arr[i][j]);
 	// printf("\n");
-	//load_images(&game);
-	// draw_map(&game, fd);
-
-	game.images[0].ptr_img = mlx_xpm_file_to_image(game.vars.mlx, PLAYER, &(game.images[0].width), &(game.images[0].height));
-	game.images[0].addr = mlx_get_data_addr(game.images[0].ptr_img, &game.images[0].bits_per_pixel, &game.images[0].line_length, &game.images[0].endian);
-	printf("line_lenght = %d\n", game.images[0].line_length);
-	resize_ptr_img(&(game.images[0]), game.vars.mlx);
-	printf("width = %d\n", game.images[0].width);
-	printf("height = %d\n", game.images[0].height);
-	printf("bbp: %d\n", game.images[0].bits_per_pixel);
-	mlx_put_image_to_window(game.vars.mlx, game.vars.win, game.images[0].ptr_img, 50, 50);
-	//mlx_put_image_to_window(game.vars.mlx, game.vars.win, game.images[1], 200, 800);
-	// // mlx_put_image_to_window(game.vars.mlx, game.vars.win, game.images[2], 900, 600);
-	// // mlx_put_image_to_window(game.vars.mlx, game.vars.win, game.images[3], 800, 800);
-	// // mlx_put_image_to_window(game.vars.mlx, game.vars.win, game.images[4], 800, 20);
+	load_images(&game);
+	game.vars.win = mlx_new_window(game.vars.mlx, game.images[1].width * (ft_strlen(arr[0]) - 1), game.images[1].width * get_num_of_cols(argv[1]), "LOL IT WORKS");
+	draw_map(&game, arr);
 	mlx_key_hook(game.vars.win, key_hook, &game.vars);
 	mlx_loop(game.vars.mlx);
 	return (0);
