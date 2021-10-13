@@ -14,28 +14,31 @@ typedef struct s_vars {
 	void	*win;
 }				t_vars;
 
-typedef struct s_image {
-	void *ptr_img;
-	char *addr;
-	int bits_per_pixel;
-	int line_length;
-	int endian;
-	int width;
-	int height;
-}				t_image;
+typedef struct s_img {
+	void	*ptr_img;
+	char	*addr;
+	int		bits_per_pixel;
+	int		line_len;
+	int		endian;
+	int		width;
+	int		height;
+}				t_img;
 
 typedef struct s_game
 {
-	t_image		images[5];
-	t_vars		vars;
-	char		**map;
+	t_img	img[5];
+	char	*xpm[5];
+	t_vars	vars;
+	char	**map;
+	int		points;
+	int		moves;
 }				t_game;
 
-#define SURFACE "textures/surface.xpm"
-#define WALL "textures/wall.xpm"
-#define PLAYER "textures/player.xpm"
-#define FOOD "textures/food.xpm"
-#define EXIT "textures/exit.xpm"
+# define SURFACE "textures/surface.xpm"
+# define WALL "textures/wall.xpm"
+# define PLAYER "textures/player.xpm"
+# define FOOD "textures/food.xpm"
+# define EXIT "textures/exit.xpm"
 
 # define KEY_A 0
 # define KEY_S 1
@@ -84,5 +87,17 @@ typedef struct s_game
 # define KEY_DOWN 125
 # define KEY_UP 126
 # define KEY_ESC 0x35
+
+void	init(t_game *game, char **argv, int fd);
+int		draw_map(t_game *game);
+int		resize_images(t_game *game);
+void	put_pixel(t_img *data, int x, int y, int color);
+int		get_pixel(t_img *data, int x, int y);
+int		find_character(t_game *game, int *x, int *y, char character);
+int		num_of_rows(char *file);
+int		handle_mouse(int key, t_game *game);
+int		key_hook(int keycode, t_game *game);
+int		ft_strlen_without_newline(char *s);
+int		is_dup(char **str, char c);
 
 #endif
